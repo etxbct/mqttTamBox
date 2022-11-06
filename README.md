@@ -31,14 +31,15 @@ Each A-D button has a RGB led which can show:
 ### Topics
 Topic used:
 
-	type        root    /client   /exit /report type    /track  /item       /order
-	Traffic   - mqtt_n  /tambox-4 /a    /traffic        /up     /direction  /state
-	Traffic   - mqtt_n  /tambox-2 /b    /traffic        /up     /train      /id
-	Traffic   - mqtt_n  /tambox-1 /c    /traffic        /down   /train      /request
+	type        root    /client   /report type  /exit   /track  /item       /order
+	Traffic   - mqtt_n  /tambox-4 /traffic      /a      /up     /direction  /state
+	Traffic   - mqtt_n  /tambox-2 /traffic      /b      /up     /train      /id
+	Traffic   - mqtt_n  /tambox-1 /traffic      /c      /down   /train      /request
 
 	root       : name of MQTT root.
 	client     : name of the MQTT client.
 	report type: type of reporter.
+	exit       : the exit used.
 	track      : up or down.
 	item       : name of the reporter.
 	order      : reported order.
@@ -60,7 +61,7 @@ Payloads for traffic:
 ### Examples of mqtt messages
 
 	Topic                                         Payload  Comment
-	mqtt_n/tambox-4/b/traffic/up/direction/state  up       Traffic direction on up track is up ( going to right) on exit B
-	mqtt_n/tambox-2/a/traffic/up/train/request    2123     Request outgoing train 2123 on up track on exit A
-	mqtt_n/tambox-2/a/traffic/up/train/accept     2123     Train 2123 accepted on up track on exit A
-	mqtt_n/tambox-4/c/traffic/down/train/reject   342      Train 348 rejected on down track on exit C
+	mqtt_n/tambox-4/traffic/b/up/direction/state  up       Traffic direction on up track is up ( going to right) on exit B
+	mqtt_n/tambox-2/traffic/a/up/train/request    2123     Request outgoing train 2123 on up track on exit A
+	mqtt_n/tambox-2/traffic/a/up/train/accept     2123     Train 2123 accepted on up track on exit A
+	mqtt_n/tambox-4/traffic/c/down/train/reject   342      Train 348 rejected on down track on exit C
