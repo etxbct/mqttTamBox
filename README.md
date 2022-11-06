@@ -60,7 +60,7 @@ Payloads for traffic:
 ### Examples of mqtt messages
 
 	Topic                                         Payload  Comment
-	mqtt_n/tambox-4/b/traffic/up/direction/state  up       Traffic direction on up track is up ( going to right)
-	mqtt_n/tambox-2/a/traffic/up/train/request    2123     Request outgoing train 2123 on up track
-	mqtt_n/tambox-2/a/traffic/up/train/accept     2123     Train 2123 accepted on up track
-	mqtt_n/tambox-4/c/traffic/down/train/reject   342      Train 348 rejected on down track
+	mqtt_n/tambox-4/b/traffic/up/direction/state  up       Traffic direction on up track is up ( going to right) on exit B
+	mqtt_n/tambox-2/a/traffic/up/train/request    2123     Request outgoing train 2123 on up track on exit A
+	mqtt_n/tambox-2/a/traffic/up/train/accept     2123     Train 2123 accepted on up track on exit A
+	mqtt_n/tambox-4/c/traffic/down/train/reject   342      Train 348 rejected on down track on exit C
