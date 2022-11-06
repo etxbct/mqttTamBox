@@ -44,6 +44,7 @@ Topic used:
 	order      : reported order.
 
 Order can be one of these:
+
 	request	   : request to send a train
 	accept     : accept the request to send a train
 	reject     : reject the request to send a train
