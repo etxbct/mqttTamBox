@@ -15,7 +15,7 @@ Left and right track are set from the outgoing track view. Single track is alway
 	----| A  left track     right track  B |----
 	    |                                  |
 	    |                                  |
-	----| C left track                   D |
+	----| C  left track                  D |
 	    +----------------------------------+
 
 ### LEDs
