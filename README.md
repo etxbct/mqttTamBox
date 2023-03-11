@@ -57,6 +57,6 @@ Payloads for traffic:
 	mqtt_h0/tambox-4/cda/traffic/left/direction/state  out      Traffic direction to CDA on left track is out
 	mqtt_h0/tambox-2/gla/traffic/left/train/request    2123     Request outgoing train 2123 to GLA on left track
 	mqtt_h0/tambox-2/sal/traffic/left/train/accept     2123     Train 2123 to SAL accepted on left track
-	mqtt_h0/tambox-1/vst/traffic/right/train/reject    342      Train 348 to VST rejected on right track
-	mqtt_h0/tambox-1/vst/traffic/right/train/cancel    342      Train 348 to VST was canceled before VST send accept or reject
+	mqtt_h0/tambox-1/vst/traffic/right/train/reject    348      Train 348 to VST rejected on right track
+	mqtt_h0/tambox-1/vst/traffic/right/train/cancel    348      Train 348 to VST was canceled before VST send accept or reject
  
