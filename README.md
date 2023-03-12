@@ -34,6 +34,7 @@ Each A-D button has a RGB led which can show:
 Topic used:
 
 	type        root    /client   /dest /report type /track  /item       /order
+	-------     ------- --------- ----- ------------ ------- ----------- ---------
 	Traffic   - mqtt_h0 /tambox-4 /cda  /traffic     /left   /direction  /state
 	Traffic   - mqtt_h0 /tambox-2 /sns  /traffic     /left   /train      /accept
 	Traffic   - mqtt_h0 /tambox-1 /b    /traffic     /right  /train      /request
