@@ -34,9 +34,9 @@
  *
  *    MQTT structure:
  *    top     /client /destination/type   /track/item     /order   payload
- *    mqtt_h0/tambox-4/cda        /traffic/left /direction/state   up
+ *    mqtt_h0/tambox-4/cda        /traffic/left /direction/set     out
  *
- *    mqtt_h0/tambox-4/cda/traffic/left/direction/state  out     Traffic direction to CDA on left track is out
+ *    mqtt_h0/tambox-4/cda/traffic/left/direction/set    out     Traffic direction to CDA on left track is out
  *    mqtt_h0/tambox-2/gla/traffic/left/train/request    2123    Request outgoing train 2123 to GLA on left track
  *    mqtt_h0/tambox-2/sal/traffic/left/train/accept     2123    Train 2123 to SAL accepted on left track
  *    mqtt_h0/tambox-1/vst/traffic/right/train/reject    342     Train 348 to VST rejected on right track
@@ -45,22 +45,22 @@
  ********************************************************************************************************************************
  *    Flow TAM request-accept
  *    CDA (tambox-1)                                                GLA (tambox-4)
- *    mqtt_h0/tambox-1/gla/traffic/left/direction/state out
- *                                                                  mqtt_h0/tambox-4/cda/traffic/left/direction/state in
+ *    mqtt_h0/tambox-1/gla/traffic/left/direction/set out
+ *                                                                  mqtt_h0/tambox-4/cda/traffic/left/direction/set in
  *    mqtt_h0/tambox-1/gla/traffic/left/train/request 2123
  *                                                                  mqtt_h0/tambox-4/cda/traffic/left/train/accept 2123
  *
  *    Flow TAM request-reject
  *    CDA (tambox-1)                                                GLA (tambox-4)
- *    mqtt_h0/tambox-1/gla/traffic/left/direction/state out
- *                                                                  mqtt_h0/tambox-4/cda/traffic/left/direction/state in
+ *    mqtt_h0/tambox-1/gla/traffic/left/direction/set out
+ *                                                                  mqtt_h0/tambox-4/cda/traffic/left/direction/set in
  *    mqtt_h0/tambox-1/gla/traffic/left/train/request 2123
  *                                                                  mqtt_h0/tambox-4/cda/traffic/left/train/reject 2123
  *
  *    Flow TAM request-cancel
  *    CDA (tambox-1)                                                GLA (tambox-4)
- *    mqtt_h0/tambox-1/gla/traffic/left/direction/state out
- *                                                                  mqtt_h0/tambox-4/cda/traffic/left/direction/state in
+ *    mqtt_h0/tambox-1/gla/traffic/left/direction/set out
+ *                                                                  mqtt_h0/tambox-4/cda/traffic/left/direction/set in
  *    mqtt_h0/tambox-1/gla/traffic/left/train/request 2123
  *    mqtt_h0/tambox-1/gla/traffic/left/train/cancel 2123
  *
@@ -230,7 +230,7 @@ String topics[NUM_TOPICS_TXT] = {TOPIC_DID_TXT,               // TOPIC_DID
                                  TOPIC_DSTATE_TXT,            // TOPIC_DSTATE
                                  TOPIC_LOST_TXT,              // TOPIC_LOST
                                  TOPIC_READY_TXT,             // TOPIC_READY
-                                 TOPIC_STATE_TXT,             // TOPIC_STATE
+                                 TOPIC_SET_TXT,               // TOPIC_SET
                                  TOPIC_REQUEST_TXT,           // TOPIC_REQUEST
                                  TOPIC_ACCEPT_TXT,            // TOPIC_ACCEPT
                                  TOPIC_CANCELED_TXT,          // TOPIC_CANCELED
@@ -713,7 +713,7 @@ void keyReceived(char key) {
 #endif
           break;
 //----------------------------------------------------------------------------------------------
-          case STATE_OUREQUEST:                                                                 // Cancel Outgoing request
+          case STATE_OUTREQUEST:                                                                // Cancel Outgoing request
             tamBoxIdle = false;
             trainNumber = "";
             tamBoxState[destination][track] = STATE_IDLE;
@@ -795,7 +795,7 @@ void keyReceived(char key) {
 #endif
           break;
 //----------------------------------------------------------------------------------------------
-          case STATE_OUREQUEST:                                                                 // Confirm Outgoing request
+          case STATE_OUTREQUEST:                                                                // Confirm Outgoing request
             trainId[destination][track] = trainNumber.toInt();
             lcd.noCursor();
             lcd.noBlink();
@@ -896,7 +896,7 @@ void keyReceived(char key) {
                       TOPIC_TRAFFIC_TXT+TOPIC_DIVIDER_TXT+                                      // traffic
                       useTrack[traffDir[destination][track]]+TOPIC_DIVIDER_TXT+                 // Track
                       TOPIC_DIR_TXT+TOPIC_DIVIDER_TXT+                                          // Direction
-                      TOPIC_STATE_TXT,                                                          // state
+                      TOPIC_SET_TXT,                                                            // set
                       trainDir[DIR_OUT], NORETAIN);                                             // {out, in}
           tamBoxState[destination][track] = STATE_TRAFDIR;
 #ifdef DEBUG
@@ -906,7 +906,7 @@ void keyReceived(char key) {
 #endif
         break;
 //----------------------------------------------------------------------------------------------
-        case STATE_OUREQUEST: 
+        case STATE_OUTREQUEST: 
           tamBoxIdle = false;
           setTxt(LCD_TAM_CANCEL, destination, DEST_ZERO_TRAIN);
         break;
@@ -925,7 +925,7 @@ void keyReceived(char key) {
     default:                                                                                    // Numbers
       if (destination < DEST_NOT_SELECTED) {
         switch (tamBoxState[destination][DEST_LEFT]) {
-          case STATE_OUREQUEST:
+          case STATE_OUTREQUEST:
             tamBoxIdle = false;
             trainNumber = trainNumber+key;
             setTxt(LCD_TRAIN_ID, destination, trainNumber.toInt());
@@ -1051,21 +1051,21 @@ void handleDirection(String clt, String trk, String msg) {
             traffDir[i][track] = DIR_IN;
             setDirectionTxt(i, DIR_IN);
             updateLcd(i);
-            sendMqtt = TOPIC_STATE;
+            sendMqtt = TOPIC_SET;
 #ifdef DEBUG
             setTo = trainDir[traffDir[i][track]];
 #endif
           }
           else {                                                                                // Tambox busy, reject  direction out
             traffDir[i][track] = DIR_OUT;
-            sendMqtt = TOPIC_STATE;
+            sendMqtt = TOPIC_SET;
           }
         break;
 //----------------------------------------------------------------------------------------------
         case STATE_TRAFDIR:
           if (msg == TOPIC_IN_TXT) {                                                            // Direction out acknowledged
             tamBoxIdle = false;
-            tamBoxState[i][track] = STATE_OUREQUEST;
+            tamBoxState[i][track] = STATE_OUTREQUEST;
 #ifdef DEBUG
             Serial.println(db1Text+__LINE__+" State change for "+useTrack[track]+" track!");
 #endif
@@ -1095,8 +1095,8 @@ void handleDirection(String clt, String trk, String msg) {
           }
         break;
 //----------------------------------------------------------------------------------------------
-        case STATE_OUREQUEST:                                                                   // Reject Direction out
-          sendMqtt = TOPIC_STATE;
+        case STATE_OUTREQUEST:                                                                  // Reject Direction out
+          sendMqtt = TOPIC_SET;
         break;
 #ifdef DEBUG
         Serial.println(db1Text+__LINE__+" Traffic direction from "+clt+" on track "+useTrack[track]+" set to "+setTo);
@@ -1112,7 +1112,7 @@ void handleDirection(String clt, String trk, String msg) {
                     TOPIC_TRAFFIC_TXT+TOPIC_DIVIDER_TXT+                                        // traffic
                     useTrack[track]+TOPIC_DIVIDER_TXT+                                          // Track
                     TOPIC_DIR_TXT+TOPIC_DIVIDER_TXT+                                            // Direction
-                    topics[sendMqtt],                                                           // state
+                    topics[sendMqtt],                                                           // set
                     trainDir[traffDir[i][track]], NORETAIN);                                    // {in,out}
 
       }
@@ -1184,7 +1184,7 @@ void handleTrain(String clt, String trk, String ord, String msg) {
 //----------------------------------------------------------------------------------------------
       else if (ord == TOPIC_ACCEPT_TXT) {                                                       // Incoming accept
         switch (tamBoxState[i][track]) {
-          case STATE_OUREQUEST:
+          case STATE_OUTREQUEST:
             if (trainId[i][track] == msg.toInt()) {
 #ifdef DEBUG
               Serial.println(db1Text+__LINE__+" Outgoing request to: "+clt+
@@ -1200,6 +1200,7 @@ void handleTrain(String clt, String trk, String ord, String msg) {
               if (LCD_SHOW_TEXT-BEEP_DURATION > 0) {
                 delay(LCD_SHOW_TEXT-BEEP_DURATION);                                             // Show string for 3 sec
               }
+              setDirectionTxt(i, DIR_OUT);
               updateLcd(DEST_ALL_DEST);
               tamBoxIdle = true;
             }
@@ -1222,7 +1223,7 @@ void handleTrain(String clt, String trk, String ord, String msg) {
 //----------------------------------------------------------------------------------------------
       else if (ord == TOPIC_REJECT_TXT) {                                                       // Incoming reject
         switch (tamBoxState[i][track]) {
-          case STATE_OUREQUEST:
+          case STATE_OUTREQUEST:
             if (trainId[i][track] == msg.toInt()) {
 #ifdef DEBUG
               Serial.println(db1Text+__LINE__+" Outgoing request to: "+clt+
@@ -1239,6 +1240,7 @@ void handleTrain(String clt, String trk, String ord, String msg) {
               if (LCD_SHOW_TEXT-BEEP_DURATION > 0) {
                 delay(LCD_SHOW_TEXT-BEEP_DURATION);                                             // Show string for 3 sec
               }
+              setDirectionTxt(i, DIR_OUT);
               setNodeTxt(i,track);
               updateLcd(DEST_ALL_DEST);
               tamBoxIdle = true;
@@ -1280,6 +1282,7 @@ void handleTrain(String clt, String trk, String ord, String msg) {
                 delay(LCD_SHOW_TEXT-BEEP_DURATION);                                             // Show string for 3 sec
               }
               setNodeTxt(i,track);
+              setDirectionTxt(i, DIR_OUT);
               updateLcd(DEST_ALL_DEST);
               tamBoxIdle = true;
             }
@@ -1522,7 +1525,15 @@ void setDirectionTxt(int dest, int trk) {
     case DEST_C:
       switch (traffDir[dest][trk]) {
         case DIR_OUT:                                                                           // Outgoing direction
-          runningString[dest][LCD_DIR_TXT] = DIR_LEFT_TXT;                                      // <
+          switch (tamBoxState[dest][trk]) {
+            case STATE_OUTREQUEST:
+              runningString[dest][LCD_DIR_TXT] = DIR_QUERY_TXT;                                 // ?
+            break;
+
+            default:
+              runningString[dest][LCD_DIR_TXT] = DIR_LEFT_TXT;                                  // <
+            break;
+          }
         break;
 
         case DIR_IN:                                                                            // Incomming direction
@@ -1530,7 +1541,7 @@ void setDirectionTxt(int dest, int trk) {
         break;
 
         default:                                                                                // Connection lost
-          runningString[dest][LCD_DIR_TXT] = DIR_LOST_TXT;                                      // ?
+          runningString[dest][LCD_DIR_TXT] = DIR_LOST_TXT;                                      // -
         break;
       }
     break;
@@ -1538,7 +1549,15 @@ void setDirectionTxt(int dest, int trk) {
     default:
       switch (traffDir[dest][trk]) {
         case DIR_OUT:                                                                           // Outgoing direction
-          runningString[dest][LCD_DIR_TXT] = DIR_RIGHT_TXT;                                     // >
+          switch (tamBoxState[dest][trk]) {
+            case STATE_OUTREQUEST:
+              runningString[dest][LCD_DIR_TXT] = DIR_QUERY_TXT;                                 // ?
+            break;
+
+            default:
+              runningString[dest][LCD_DIR_TXT] = DIR_RIGHT_TXT;                                 // >
+            break;
+          }
         break;
 
         case DIR_IN:                                                                            // Incomming direction
@@ -1546,7 +1565,7 @@ void setDirectionTxt(int dest, int trk) {
         break;
 
         default:                                                                                // Connection lost
-          runningString[dest][LCD_DIR_TXT] = DIR_LOST_TXT;                                      // ?
+          runningString[dest][LCD_DIR_TXT] = DIR_LOST_TXT;                                      // -
         break;
       }
     break;
@@ -1850,7 +1869,7 @@ bool mqttConnect() {
  *    MQTT structure:
  *    TOPIC_ROOT /TOPIC_CLIENT /TOPIC_DEST /TOPIC_TYPE /TOPIC_TRACK /TOPIC_ITEM /TOPIC_ORDER   payload
  *
- *  ex mqtt_h0/tambox-4/cda/traffic/left/direction/state   out
+ *  ex mqtt_h0/tambox-4/cda/traffic/left/direction/set     out
  *     mqtt_h0/tambox-2/blo/traffic/left/train/request     233
  *     mqtt_h0/tambox-3/sns/traffic/right/train/accept     123
  *     mqtt_h0/tambox-2/cda/traffic/left/train/reject      233
@@ -2487,7 +2506,7 @@ void setLed(int dest, int stat) {
 #endif
   switch (stat) {
     case STATE_INREQUEST:
-    case STATE_OUREQUEST:
+    case STATE_OUTREQUEST:
       rgbLed[dest] = CRGB::Yellow;
 #ifdef DEBUG
       Serial.println(db1Text+__LINE__+" Destination led "+nodeIDTxt[dest]+" set to Yellow");

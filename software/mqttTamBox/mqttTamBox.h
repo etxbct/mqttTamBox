@@ -2,12 +2,12 @@
   * Settings for this specific MQTT client
   */
 // Access point
-#define APNAME                  "TAMBOX-1"
-#define APTYPE                  "TamBox"
-#define APPASSWORD              "tambox1234"
-#define ROOTTOPIC               "mqtt_h0"
-#define CLIENTSIGN              "CDA"
-#define SW_VERSION              "ver 1.0.0"
+#define APNAME                  "TAMBOX-1"    // uniqe client id used as AP name
+#define APTYPE                  "TamBox"      // client type for tambox
+#define APPASSWORD              "tambox1234"  // initial password for connecting in AP mode, needs to be changed first time logging in
+#define ROOTTOPIC               "mqtt_h0"     // typically used on H0 track layout
+#define CLIENTSIGN              "CDA"         // station id for the tambox
+#define SW_VERSION              "ver 1.1.0"
 
 // -- Configuration specific key. The value should be modified if config structure is changed.
 #define CONFIG_VERSION          "ver 0.4"
@@ -18,13 +18,13 @@
 #define NUMBER_LEN              8
 
 // Debug
-//#define DEBUG
+//#define DEBUG                         // uncomment to use debug mode
 
 // Used pins
-//SCL                          D1      // For i2c communication pin 5
-//SDA                          D2      // For i2c communication pin 4
-#define BUZZER_PIN             D5      // Buzzer signal pin
-#define FASTLED_PIN            D6      // Led signal pin
+//SCL                          D1       // For i2c communication pin 5
+//SDA                          D2       // For i2c communication pin 4
+#define BUZZER_PIN             D5       // Buzzer signal pin
+#define FASTLED_PIN            D6       // Led signal pin
 
 // i2C addresses
 #define KEYI2CADDR           0x20       // Keypad address
@@ -118,7 +118,7 @@
 #define STATE_TRAFDIR           2       // Traffic direction sent
 #define STATE_INREQUEST         3       // Incoming request
 #define STATE_INTRAIN           4       // Incoming Train
-#define STATE_OUREQUEST         5       // Outgoing request
+#define STATE_OUTREQUEST        5       // Outgoing request
 #define STATE_OUTTRAIN          6       // Outgoing Train
 #define STATE_LOST              7       // Lost connection
 
@@ -148,7 +148,7 @@
 #define TOPIC_TYPE              3       // traffic
 #define TOPIC_TRACK             4       // left/right
 #define TOPIC_ITEM              5       // direction/train
-#define TOPIC_ORDER             6       // state/reject/accept/request/cancel
+#define TOPIC_ORDER             6       // set/reject/accept/request/cancel
 
 // MQTT topics strings
 #define NUM_TOPICS_TXT         19
@@ -169,8 +169,8 @@
 #define TOPIC_LOST_TXT          "lost"
 #define TOPIC_READY             6
 #define TOPIC_READY_TXT         "ready"
-#define TOPIC_STATE             7
-#define TOPIC_STATE_TXT         "state"
+#define TOPIC_SET               7
+#define TOPIC_SET_TXT           "set"
 #define TOPIC_REQUEST           8
 #define TOPIC_REQUEST_TXT       "request"
 #define TOPIC_ACCEPT            9
@@ -207,7 +207,8 @@
 #define DIR_IDLE_TXT            " "
 #define DIR_RIGHT_TXT           ">"
 #define DIR_LEFT_TXT            "<"
-#define DIR_LOST_TXT            "?"
+#define DIR_QUERY_TXT           "?"
+#define DIR_LOST_TXT            "-"
 
 // Text in LCD display
 #define LCD_TOOGLE_TRACK     2000       // Toogle track between left and right on duoble track every 2 sec
