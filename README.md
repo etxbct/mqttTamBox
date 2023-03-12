@@ -35,7 +35,7 @@ Topic used:
 
 	type        root    /client   /dest /report type /track  /item       /order
 	-------     ------- --------- ----- ------------ ------- ----------- ---------
-	Traffic   - mqtt_h0 /tambox-4 /cda  /traffic     /left   /direction  /state
+	Traffic   - mqtt_h0 /tambox-4 /cda  /traffic     /left   /direction  /set
 	Traffic   - mqtt_h0 /tambox-2 /sns  /traffic     /left   /train      /accept
 	Traffic   - mqtt_h0 /tambox-1 /b    /traffic     /right  /train      /request
 
@@ -55,7 +55,7 @@ Order can be one of these:
 	reject     : reject the request to send a train
 	in         : report train received at station
 	out        : report train leaving station
-	state      : set state of track direction
+	set        : set track direction
 
 ### Payloads
 Payloads for traffic:
@@ -66,7 +66,7 @@ Payloads for traffic:
 ### Examples of mqtt messages
 
 	Topic                                              Payload  Comment
-	mqtt_h0/tambox-4/cda/traffic/left/direction/state  out      Traffic direction to CDA on left track is out
+	mqtt_h0/tambox-4/cda/traffic/left/direction/set    out      Traffic direction to CDA on left track is out
 	mqtt_h0/tambox-2/gla/traffic/left/train/request    2123     Request outgoing train 2123 to GLA on left track
 	mqtt_h0/tambox-2/sal/traffic/left/train/accept     2123     Train 2123 to SAL accepted on left track
 	mqtt_h0/tambox-1/vst/traffic/right/train/reject    348      Train 348 to VST rejected on right track
