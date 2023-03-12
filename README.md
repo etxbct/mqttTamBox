@@ -10,6 +10,7 @@ The TAM Box has in total four exits, A-D.
 The left side has A and C and the right side has B and D.
 Left and right track are set from the outgoing track view. Single track is always named left track.
 
+	                 Front side
 	    +----------------------------------+
 	----| A  right track     left track  B |----
 	----| A  left track     right track  B |----
@@ -17,6 +18,7 @@ Left and right track are set from the outgoing track view. Single track is alway
 	    |                                  |
 	----| C  left track                  D |
 	    +----------------------------------+
+	                  Back side
 
 ### LEDs
 Each track direction is using key A-D. A and C is train direction to the left, and B and D is train direction to the right.
