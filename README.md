@@ -117,6 +117,7 @@ The MQTT message body, on the other hand, contains the contents of the message.
 The body is a JSON formatted message body. Each message body's JSON conforms to a format suggested by Richard Hughes mqtt-lcp project.
 
 There are some common elements in all JSON message bodies:
+
 - root-element: Type of message ("tam", "ping", "node"), matches topic type in the message topic.
 - "version": version number of the JSON format
 - "timestamp": time message was sent in seconds since the unix epoch (real time, not fastclock)
@@ -138,34 +139,42 @@ There are some common elements in all JSON message bodies:
 ### Example of messages
 
 Traffic direction change to tambox-4 on right track:
+
 - Topic: `cmd/h0/tam/tambox-4/a/req`
 Body: `{"tam": {"version": "1.0", "timestamp": 1707767518, "session-id": "req:1707767518", "node-id": "tambox-1", "port-id": "a", "track": "right", "respond-to": "cmd/h0/tam/tambox-1/b/res", "state": {"desired": "in"}}}`
  
 Traffic direction change to tambox-4 on right track accepted by tambox-4:
+
 - Topic: `cmd/h0/tam/tambox-1/b/res`                    
 Body: `{"tam": {"version": "1.0", "timestamp": 1707767534, "session-id": "req:1707767518", "node-id": "tambox-4", "port-id": "b", "track": "right", "state": {"desired": "in", "reported": "in"}}}`
 
 Request train 2123 to tambox-2 on right track:
+
 - Topic: `cmd/h0/tam/tambox-2/a/req`
 Body: `{"tam": {"version": "1.0", "timestamp": 1707768634, "session-id": "req:1707768634", "node-id": "tambox-1", "port-id": "a", "track": "right", "identity": 2123, "respond-to": "cmd/h0/tam/tambox-1/a/res", "state": {"desired": "accept"}}}`
 
 Train 2123 to tambox-2 accepted by tambox-2:
+
 - Topic: `cmd/h0/tam/tambox-1/a/res`
 Body: `{"tam": {"version": "1.0", "timestamp": 1707768655, "session-id": "req:1707768634", "node-id": "tambox-2", "port-id": "a", "track": "right", "identity": 2123, "state": {"desired": "accept", "reported": "accepted"}}}`
 
 Train 348 to tambox-5 rejected on right track:
+
 - Topic: `cmd/h0/tam/tambox-1/a/res`
 Body: `{"tam": {"version": "1.0", "timestamp": 1707768656, "node-id": "tambox-5", "port-id": "a", "track": "left", "identity": 348, "session-id": "req:1707768634", "state": {"desired": "accept", "reported": "rejected"}}}`
 
 Train 348 to tambox-5 was canceled before tambox-5 send accepted or rejected:
+
 - Topic: `cmd/h0/tam/tambox-5/a/req`
 Body: `{"tam": {"version": "1.0", "timestamp": 1707768766, "node-id": "tambox-5", "port-id": "a", "track": "right", "identity": 348, "session-id": "req:1707768766", "respond-to": "cmd/h0/tam/tambox-1/a/res", "state": {"desired": "cancel"}}}`
 
 Train 348 reported out on track left by tambox-5:
+
 - Topic: `dt/h0/tam/tambox-5/a`
 Body: `{"tam": {"version": "1.0", "timestamp": 1707768766, "node-id": "tambox-5", "port-id": "a", "track": "left", "identity": 348, "state": {"reported": "out"}}}`
 
 Train 348 reported in on track right by tambox-1:
+
 - Topic: `dt/h0/tam/tambox-1/a`
 Body: `{"tam": {"version": "1.0", "timestamp": 1707769346, "node-id": "tambox-1", "port-id": "a", "track": "right", "identity": 348, "state": {"reported": "in"}}}`
 
@@ -174,4 +183,5 @@ Tambox-1 sending ping:
 Body: `{"ping": {"version": "1.0", "timestamp": 1707768845, "node-id": "tambox-1", "state": {"reported": "ping"}, "metadata": {......}}}`
 
 Example of metadata:
+
 - `"metadata": {"type": "mqttTamBox", "ver": "ver 2.0.0", "name": "Charlottendahl", "sign": "CDA", "rssi": "-65 dbm"}`
