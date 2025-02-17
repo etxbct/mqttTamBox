@@ -117,7 +117,6 @@ The MQTT message body, on the other hand, contains the contents of the message.
 The body is a JSON formatted message body. Each message body's JSON conforms to a format suggested by Richard Hughes mqtt-lcp project.
 
 There are some common elements in all JSON message bodies:
-
 - root-element: Type of message ("tam", "ping", "node"), matches topic type in the message topic.
 - "version": version number of the JSON format
 - "timestamp": time message was sent in seconds since the unix epoch (real time, not fastclock)
