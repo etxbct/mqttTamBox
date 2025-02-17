@@ -84,11 +84,11 @@ When double track is used then the requested track should be set to the receivin
 ### Topics
 Topic used:
 
-	message /scale /type     /node-id  /port-id /order  payload
-	cmd     /h0    /tam      /tambox-4 /a       /req    {json}        TAM request message
-	cmd     /h0    /tam      /tambox-4 /b       /res    {json}        TAM response message
-	dt      /h0    /tam      /tambox-4 /b               {json}        TAM data message
-	dt      /h0    /ping     /tambox-4                  {json}        Ping message
+	message  /scale  /type  /node-id   /port-id  /order  payload
+	cmd      /h0     /tam   /tambox-4  /a        /req    {json}        TAM request message
+	cmd      /h0     /tam   /tambox-4  /b        /res    {json}        TAM response message
+	dt       /h0     /tam   /tambox-4  /b                {json}        TAM data message
+	dt       /h0     /ping  /tambox-4                    {json}        Ping message
 
 	message : message sent, cmd (command) or dt (data).
 	scale   : distinguish different scales from each other when the same broker is used.
