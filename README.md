@@ -3,8 +3,8 @@ Is a tool to do TAM (TågAnMälan) between neighboring stations.
 
 TAM Box is used:
 
-	on sending side   : allocated a track between two stations and request to send a train.
-	on receiving side : accept/reject incomming request.
+	on sending side: allocated a track between two stations and request to send a train.
+	on receiving side: accept/reject incomming request.
 
 The TAM Box has in total four exits, A-D.
 The left side has A and C and the right side has B and D.
@@ -75,7 +75,10 @@ Thereafter no matter what kind of request (tam, node) was made by the requestor 
 
 ### Used cmd by mqttTamBox
 
-cmd are used when requesting to send a train
+cmd are used when requesting to send a train.
+when single track are used between station then track is Always set to left.
+
+If double track are used then the request track should be set to the receiving station track so if, as in sweden, left track is used to send traffic the train is departing on left track but arriving on right track (see picture above).
 
 ### Topics
 Topic used:
@@ -86,25 +89,25 @@ Topic used:
 	dt      /h0    /tam      /tambox-4 /b               {json}        TAM data message
 	dt      /h0    /ping     /tambox-4                  {json}        Ping message
 
-	message    : message sent, cmd (command) or dt (data).
-	scale      : distinguish different scales from each other when the same broker is used.
-	type       : type of message.
-	node-id    : the id of the MQTT client.
-	port-id    : exit/entry letter of the station, A-D.
-	order      : command message order, req (request) or res (response).
+	message : message sent, cmd (command) or dt (data).
+	scale   : distinguish different scales from each other when the same broker is used.
+	type    : type of message.
+	node-id : the id of the MQTT client.
+	port-id : exit/entry letter of the station, A-D.
+	order   : command message order, req (request) or res (response).
 
 
 Type can be any of these:
 
-	tam        : TAM message
-	ping       : ping message, sent every 10 second
-	node       : node message
+	tam     : TAM message
+	ping    : ping message, sent every 10 second
+	node    : node message
 
 
 Order can be any of these:
 
-	req        : a request
-	res        : a response to a request
+	req     : a request
+	res     : a response to a request
 
 ### Payloads
 MQTT message topics are used to request to send a train to next station.
@@ -114,52 +117,70 @@ The body is a JSON formatted message body. Each message body's JSON conforms to 
 
 There are some common elements in all JSON message bodies:
 
-- root-element : Type of message ("tam", "ping", "node"), matches topic type in the message topic.
-- "version"    : version number of the JSON format
-- "timestamp"  : time message was sent in seconds since the unix epoch (real time, not fastclock)
-- "session-id" : a unique identifier for the message.
+- root-element: Type of message ("tam", "ping", "node"), matches topic type in the message topic.
+- "version": version number of the JSON format
+- "timestamp": time message was sent in seconds since the unix epoch (real time, not fastclock)
+- "session-id": a unique identifier for the message.
 
 >Exception: The session-id in a response must match the session-id of the corresponding request message.
 
-- "node-id"    : The application node id to receive the message. Matches node-id in message topics.
-- "port-id"    : The port on the receiving node to which the message is to be applied. Matches port-id in the message topic
-- "identity"   : Optional. The identification of a specific item like a loco or rfid tag.
-- "respond-to" : " Message topic to be used in the response to a command request. The "return address".
-- "state"      : The state being requested to be changed or the current state being reported.
+- "node-id": The application node id to receive the message. Matches node-id in message topics.
+- "port-id": The port on the receiving node to which the message is to be applied. Matches port-id in the message topic
+- "identity": Optional. The identification of a specific item like a loco or rfid tag.
+- "respond-to": " Message topic to be used in the response to a command request. The "return address".
+- "state": The state being requested to be changed or the current state being reported.
 	- State has two sub elements:
-		- desired  : The state to which the port is to be changed: "accept", "in", etc. Used in command type messages
-		- reported : The current state of a port: "accepted", "rejected", etc. Used command response and data messages
+		- desired: The state to which the port is to be changed: "accept", "in", etc. Used in command type messages
+		- reported: The current state of a port: "accepted", "rejected", etc. Used command response and data messages
 - "metadata"   : Optional. Varies by message type.
 
 
 ### Example of messages
 
+Traffic direction change to tambox-4 on right track:
+
 Topic: `cmd/h0/tam/tambox-4/a/req`
-Body : `{"tam": {"version": "1.0", "timestamp": 1707767518, "session-id": "req:1707767518", "node-id": "tambox-1", "port-id": "a", "track": "right", "respond-to": "cmd/h0/tam/tambox-1/b/res", "state": {"desired": "in"}}}`
+Body: `{"tam": {"version": "1.0", "timestamp": 1707767518, "session-id": "req:1707767518", "node-id": "tambox-1", "port-id": "a", "track": "right", "respond-to": "cmd/h0/tam/tambox-1/b/res", "state": {"desired": "in"}}}`
  
+Traffic direction change to tambox-4 on right track accepted by tambox-4:
+
 Topic: `cmd/h0/tam/tambox-1/b/res`                    
-Body : `{"tam": {"version": "1.0", "timestamp": 1707767534, "session-id": "req:1707767518", "node-id": "tambox-4", "port-id": "b", "track": "left", "state": {"desired": "in", "reported": "in"}}}`
+Body: `{"tam": {"version": "1.0", "timestamp": 1707767534, "session-id": "req:1707767518", "node-id": "tambox-4", "port-id": "b", "track": "right", "state": {"desired": "in", "reported": "in"}}}`
+
+Request train 2123 to tambox-2 on right track:
 
 Topic: `cmd/h0/tam/tambox-2/a/req`
-Body : `{"tam": {"version": "1.0", "timestamp": 1707768634, "session-id": "req:1707768634", "node-id": "tambox-1", "port-id": "a", "track": "right", "identity": 2123, "respond-to": "cmd/h0/tam/tambox-1/a/res", "state": {"desired": "accept"}}}`
+Body: `{"tam": {"version": "1.0", "timestamp": 1707768634, "session-id": "req:1707768634", "node-id": "tambox-1", "port-id": "a", "track": "right", "identity": 2123, "respond-to": "cmd/h0/tam/tambox-1/a/res", "state": {"desired": "accept"}}}`
+
+Train 2123 to tambox-2 accepted by tambox-2:
 
 Topic: `cmd/h0/tam/tambox-1/a/res`
-Body : `{"tam": {"version": "1.0", "timestamp": 1707768655, "session-id": "req:1707768634", "node-id": "tambox-5", "port-id": "a", "track": "left", "identity": 2123, "state": {"desired": "accept", "reported": "accepted"}}}`
+Body: `{"tam": {"version": "1.0", "timestamp": 1707768655, "session-id": "req:1707768634", "node-id": "tambox-2", "port-id": "a", "track": "right", "identity": 2123, "state": {"desired": "accept", "reported": "accepted"}}}`
+
+Train 348 to tambox-5 rejected on right track:
 
 Topic: `cmd/h0/tam/tambox-1/a/res`
-Body : `{"tam": {"version": "1.0", "timestamp": 1707768656, "node-id": "tambox-5", "port-id": "a", "track": "left", "identity": 348, "session-id": "req:1707768634", "state": {"desired": "accept", "reported": "rejected"}}}`
+Body: `{"tam": {"version": "1.0", "timestamp": 1707768656, "node-id": "tambox-5", "port-id": "a", "track": "left", "identity": 348, "session-id": "req:1707768634", "state": {"desired": "accept", "reported": "rejected"}}}`
+
+Train 348 to tambox-5 was canceled before tambox-5 send accepted or rejected:
 
 Topic: `cmd/h0/tam/tambox-5/a/req`
-Body : `{"tam": {"version": "1.0", "timestamp": 1707768766, "node-id": "tambox-5", "port-id": "a", "track": "right", "identity": 348, "session-id": "req:1707768766", "respond-to": "cmd/h0/tam/tambox-1/a/res", "state": {"desired": "cancel"}}}`
+Body: `{"tam": {"version": "1.0", "timestamp": 1707768766, "node-id": "tambox-5", "port-id": "a", "track": "right", "identity": 348, "session-id": "req:1707768766", "respond-to": "cmd/h0/tam/tambox-1/a/res", "state": {"desired": "cancel"}}}`
+
+Train 348 reported out on track left by tambox-5:
 
 Topic: `dt/h0/tam/tambox-5/a`
-Body : `{"tam": {"version": "1.0", "timestamp": 1707768766, "node-id": "tambox-5", "port-id": "a", "track": "left", "identity": 348, "state": {"reported": "out"}}}`
+Body: `{"tam": {"version": "1.0", "timestamp": 1707768766, "node-id": "tambox-5", "port-id": "a", "track": "left", "identity": 348, "state": {"reported": "out"}}}`
+
+Train 348 reported in on track right by tambox-1:
 
 Topic: `dt/h0/tam/tambox-1/a`
-Body : `{"tam": {"version": "1.0", "timestamp": 1707769346, "node-id": "tambox-1", "port-id": "a", "track": "right", "identity": 348, "state": {"reported": "in"}}}`
+Body: `{"tam": {"version": "1.0", "timestamp": 1707769346, "node-id": "tambox-1", "port-id": "a", "track": "right", "identity": 348, "state": {"reported": "in"}}}`
+
+Tambox-1 sending ping:
 
 Topic: `dt/h0/ping/tambox-1`
-Body : `{"ping": {"version": "1.0", "timestamp": 1707768845, "node-id": "tambox-1", "state": {"reported": "ping"},"metadata": {......}}}`
+Body: `{"ping": {"version": "1.0", "timestamp": 1707768845, "node-id": "tambox-1", "state": {"reported": "ping"}, "metadata": {......}}}`
 
 Example of metadata:
 `"metadata": {"type": "mqttTamBox", "ver": "ver 2.0.0", "name": "Charlottendahl", "sign": "CDA", "rssi": "-65 dbm"}`
