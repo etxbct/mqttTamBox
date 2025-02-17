@@ -76,9 +76,10 @@ Thereafter no matter what kind of request (tam, node) was made by the requestor 
 ### Used cmd by mqttTamBox
 
 cmd are used when requesting to send a train.
-when single track are used between station then track is Always set to left.
 
-If double track are used then the request track should be set to the receiving station track so if, as in sweden, left track is used to send traffic the train is departing on left track but arriving on right track (see picture above).
+When single track is used between stations then track is always set to left.
+
+When double track is used then the requested track should be set to the receiving station track so if, as in Sweden, left track is used to send traffic the train is departing on left track but arriving on right track (see picture above).
 
 ### Topics
 Topic used:
