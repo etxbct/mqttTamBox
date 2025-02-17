@@ -104,12 +104,6 @@ Type can be any of these:
 	ping    : ping message, sent every 10 second
 	node    : node message
 
-
-Order can be any of these:
-
-	req     : a request
-	res     : a response to a request
-
 ### Payloads
 MQTT message topics are used to request to send a train to next station.
 The MQTT message body, on the other hand, contains the contents of the message.
