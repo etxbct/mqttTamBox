@@ -135,27 +135,27 @@ There are some common elements in all JSON message bodies:
 Traffic direction change to tambox-4 on right track:
 
 - Topic: `cmd/h0/tam/tambox-4/a/req`
-Body: `{"tam": {"version": "1.0", "timestamp": 1707767518, "session-id": "req:1707767518", "node-id": "tambox-1", "port-id": "a", "track": "right", "respond-to": "cmd/h0/tam/tambox-1/b/res", "state": {"desired": "in"}}}`
+Body: `{"tam": {"version": "1.0", "timestamp": 1707767518, "session-id": "req:1707767518", "node-id": "tambox-4", "port-id": "a", "track": "right", "respond-to": "cmd/h0/tam/tambox-1/b/res", "state": {"desired": "in"}}}`
  
 Traffic direction change to tambox-4 on right track accepted by tambox-4:
 
 - Topic: `cmd/h0/tam/tambox-1/b/res`                    
-Body: `{"tam": {"version": "1.0", "timestamp": 1707767534, "session-id": "req:1707767518", "node-id": "tambox-4", "port-id": "b", "track": "right", "state": {"desired": "in", "reported": "in"}}}`
+Body: `{"tam": {"version": "1.0", "timestamp": 1707767534, "session-id": "req:1707767518", "node-id": "tambox-1", "port-id": "b", "track": "right", "state": {"desired": "in", "reported": "in"}}}`
 
 Request train 2123 to tambox-2 on right track:
 
 - Topic: `cmd/h0/tam/tambox-2/a/req`
-Body: `{"tam": {"version": "1.0", "timestamp": 1707768634, "session-id": "req:1707768634", "node-id": "tambox-1", "port-id": "a", "track": "right", "identity": 2123, "respond-to": "cmd/h0/tam/tambox-1/a/res", "state": {"desired": "accept"}}}`
+Body: `{"tam": {"version": "1.0", "timestamp": 1707768634, "session-id": "req:1707768634", "node-id": "tambox-2", "port-id": "a", "track": "right", "identity": 2123, "respond-to": "cmd/h0/tam/tambox-1/a/res", "state": {"desired": "accept"}}}`
 
 Train 2123 to tambox-2 accepted by tambox-2:
 
 - Topic: `cmd/h0/tam/tambox-1/a/res`
-Body: `{"tam": {"version": "1.0", "timestamp": 1707768655, "session-id": "req:1707768634", "node-id": "tambox-2", "port-id": "a", "track": "right", "identity": 2123, "state": {"desired": "accept", "reported": "accepted"}}}`
+Body: `{"tam": {"version": "1.0", "timestamp": 1707768655, "session-id": "req:1707768634", "node-id": "tambox-1", "port-id": "a", "track": "right", "identity": 2123, "state": {"desired": "accept", "reported": "accepted"}}}`
 
 Train 348 to tambox-5 rejected on right track:
 
 - Topic: `cmd/h0/tam/tambox-1/a/res`
-Body: `{"tam": {"version": "1.0", "timestamp": 1707768656, "node-id": "tambox-5", "port-id": "a", "track": "left", "identity": 348, "session-id": "req:1707768634", "state": {"desired": "accept", "reported": "rejected"}}}`
+Body: `{"tam": {"version": "1.0", "timestamp": 1707768656, "node-id": "tambox-1", "port-id": "a", "track": "left", "identity": 348, "session-id": "req:1707768634", "state": {"desired": "accept", "reported": "rejected"}}}`
 
 Train 348 to tambox-5 was canceled before tambox-5 send accepted or rejected:
 
