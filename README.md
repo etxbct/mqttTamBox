@@ -21,7 +21,7 @@ Left and right track are set from the incomming track view. Single track is alwa
 	             Station Back side
 
 ## Topics and payloads
-The syntax of topics and payloads are based on Richard Hughes [mqtt-lcp] (https://github.com/rphughespa/mqtt-lcp) with some adaptation.
+The syntax of topics and payloads are based on Richard Hughes [mqtt-lcp](https://github.com/rphughespa/mqtt-lcp) with some adaptation.
 
 ## Message Types
 There are two basic types of messages that can be used: "command" and "data".
@@ -108,7 +108,7 @@ Type can be any of these:
 MQTT message topics are used to request to send a train to next station.
 The MQTT message body, on the other hand, contains the contents of the message.
 
-The body is a JSON formatted message body. Each message body's JSON conforms to a format suggested by Richard Hughes [mqtt-lcp] (https://github.com/rphughespa/mqtt-lcp) project.
+The body is a JSON formatted message body. Each message body's JSON conforms to a format suggested by Richard Hughes [mqtt-lcp](https://github.com/rphughespa/mqtt-lcp) project.
 
 There are some common elements in all JSON message bodies:
 
