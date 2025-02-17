@@ -63,7 +63,7 @@ Two particular parts of the request body are very import in the request/response
 
 The other important part of the request is the "respond-to". It is used by the responder as the topic of the response it publishes to the requestor. In snail-mail terms, it is the return address or in email it is the “from”.
 
-It is recommended that the response topic be the in this form:
+It is recommended that the response topic be in this form:
 
 Topic: `cmd/h0/node/node-id`
 
