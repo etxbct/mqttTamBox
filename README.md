@@ -8,7 +8,7 @@ TAM Box is used:
 
 The TAM Box has in total four exits, A-D.
 The left side has A and C and the right side has B and D.
-Left and right track are set from the outgoing track view. Single track is always named left track.
+Left and right track are set from the incomming track view. Single track is always named left track.
 
 	             Station Front side
 	    +----------------------------------+
