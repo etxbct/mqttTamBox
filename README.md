@@ -119,7 +119,7 @@ There are some common elements in all JSON message bodies:
 
 >Exception: The session-id in a response must match the session-id of the corresponding request message.
 
-- "node-id": The application node id to receive the message. Matches node-id in message topics.
+- "node-id": The application node id that sent the message. Matches node-id in message topics.
 - "port-id": The port on the receiving node to which the message is to be applied. Matches port-id in the message topic
 - "identity": Optional. The identification of a specific scheduled train number.
 - "respond-to": " Message topic to be used in the response to a command request. The "return address".

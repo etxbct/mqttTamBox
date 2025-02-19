@@ -255,7 +255,7 @@ enum {_REQUEST, _RESPONSE, _DATA};
 #define LCP_BODY_REBOOT                         "reboot"
 #define LCP_BODY_SHUTDOWN                     "shutdown"
 #define NODE_SUPERVISOR                     "supervisor"
-enum {LCP_SESSION_ID, LCP_RESPOND_TO, LCP_DESIRED_STATE, LCP_PORT_ID, LCP_TRACK};
+enum {LCP_SESSION_ID, LCP_RESPOND_TO, LCP_DESIRED_STATE, LCP_NODE_ID, LCP_PORT_ID, LCP_TRACK};
 
 // Directions
 // uint8_t traffDir[DEST_BUTTONS][MAX_NUM_OF_TRACKS]

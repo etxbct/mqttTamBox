@@ -386,8 +386,8 @@ const char* escapeChar              = "\xc3";                 // Character sent 
 uint8_t trackState[DEST_BUTTONS][MAX_NUM_OF_TRACKS];          // State per track and destination
 
 // Store respond-to, session-id, port-id and desired state on sent and received cmd per destination
-String resCmd[DEST_BUTTONS][5];                               // response cmd
-String reqCmd[DEST_BUTTONS][5];                               // request cmd
+String resCmd[DEST_BUTTONS][6];                               // response cmd
+String reqCmd[DEST_BUTTONS][6];                               // request cmd
 
 // Store incoming data message if tambox is busy
 uint16_t dtInQueue[DEST_BUTTONS][Q_DATA];                     // state, id, track, train
@@ -735,7 +735,6 @@ void keyReceived(char key) {
 
   doc[TAM][VERSION]   = LCP_BODY_VER;
   doc[TAM][TIMESTAMP] = timestamp;
-  doc[TAM][NODE_ID]   = tamBoxConfig[OWN][ID];
 
   switch (key) {
     case '*':                                                                                   // NOK, Not accepted button pushed
@@ -747,6 +746,7 @@ void keyReceived(char key) {
             ownTrack = RIGHT_TRACK;
           }
         }
+
 #ifdef DEBUG
         Serial.printf("%-16s: %d  Destination: %s, State in: %s for %s track\n", __func__, __LINE__, destIDTxt[destination], trackStateTxt[trackState[destination][ownTrack]], useTrackTxt[ownTrack]);
         Serial.printf("%-16s: %d  Destination selected %d times\n", __func__, __LINE__, destBtnPushed);
@@ -759,12 +759,13 @@ void keyReceived(char key) {
 
             trackState[destination][ownTrack] = _IDLE;                                          // Set track state to idle
 
-            doc[TAM][SESSION_ID]                      = reqCmd[destination][LCP_SESSION_ID];
-            doc[TAM][PORT_ID]                         = reqCmd[destination][LCP_PORT_ID];
-            doc[TAM][TRACK]                           = String(useTrackTxt[destinationTrack]);
-            doc[TAM][STATE][DESIRED]                  = reqCmd[destination][LCP_DESIRED_STATE];
-            doc[TAM][STATE][REPORTED]                 = REJECTED;
-            doc[TAM][TRAIN_ID]                        = trainId[destination][ownTrack];
+            doc[TAM][NODE_ID]                       = reqCmd[destination][LCP_NODE_ID];
+            doc[TAM][PORT_ID]                       = reqCmd[destination][LCP_PORT_ID];
+            doc[TAM][TRACK]                         = String(useTrackTxt[destinationTrack]);
+            doc[TAM][TRAIN_ID]                      = trainId[destination][ownTrack];
+            doc[TAM][SESSION_ID]                    = reqCmd[destination][LCP_SESSION_ID];
+            doc[TAM][STATE][DESIRED]                = reqCmd[destination][LCP_DESIRED_STATE];
+            doc[TAM][STATE][REPORTED]               = REJECTED;
 
             strcpy(receiver, reqCmd[destination][LCP_RESPOND_TO].c_str());
 /*
@@ -813,12 +814,13 @@ void keyReceived(char key) {
 #endif
             trainNumber = "";
             trackState[destination][ownTrack] = _IDLE;                                          // Set track state to idle
+            setDirString(destination, ownTrack);
 #ifdef DEBUG
             Serial.printf("%-16s: %d  State changed to %s for %s track!\n", __func__, __LINE__, trackStateTxt[trackState[destination][ownTrack]], useTrackTxt[ownTrack]);
 #endif
             if (trainId[destination][ownTrack] != DEST_TRAIN_0) {
-              resCmd[destination][LCP_PORT_ID]        = String(destIDTxt[destination]);
-              resCmd[destination][LCP_PORT_ID].toLowerCase();
+              resCmd[destination][LCP_NODE_ID]        = tamBoxConfig[destination][ID];
+              resCmd[destination][LCP_PORT_ID]        = tamBoxConfig[destination][EXIT];
               resCmd[destination][LCP_SESSION_ID]     = "req:" + String(timestamp);
               resCmd[destination][LCP_RESPOND_TO]     = "cmd/" + tamBoxMqtt[SCALE] + "/" +
                                                         "tam/" + tamBoxConfig[OWN][ID] + "/" +
@@ -826,10 +828,12 @@ void keyReceived(char key) {
               resCmd[destination][LCP_TRACK]          = String(useTrackTxt[destinationTrack]);
               resCmd[destination][LCP_DESIRED_STATE]  = CANCEL;
 
+              doc[TAM][NODE_ID]                       = resCmd[destination][LCP_NODE_ID];
+              doc[TAM][PORT_ID]                       = resCmd[destination][LCP_PORT_ID];
+              doc[TAM][TRACK]                         = resCmd[destination][LCP_TRACK];
+              doc[TAM][TRAIN_ID]                      = trainId[destination][ownTrack];
               doc[TAM][SESSION_ID]                    = resCmd[destination][LCP_SESSION_ID];
               doc[TAM][RESPOND_TO]                    = resCmd[destination][LCP_RESPOND_TO];
-              doc[TAM][PORT_ID]                       = resCmd[destination][LCP_PORT_ID];
-              doc[TAM][TRAIN_ID]                      = trainId[destination][ownTrack];
               doc[TAM][STATE][DESIRED]                = resCmd[destination][LCP_DESIRED_STATE];
 
               strcpy(receiver, COMMAND); strcat(receiver, "/");
@@ -923,6 +927,7 @@ void keyReceived(char key) {
 
             trackState[destination][ownTrack] = _IDLE;                                          // Set track state to idle
 
+            doc[TAM][NODE_ID]                       = tamBoxConfig[OWN][ID];
             doc[TAM][PORT_ID]                       = portId;
             doc[TAM][TRACK]                         = String(useTrackTxt[destinationTrack]);
             doc[TAM][TRAIN_ID]                      = trainId[destination][ownTrack];
@@ -960,10 +965,11 @@ void keyReceived(char key) {
 
             trackState[destination][ownTrack] = _INACCEPT;                                      // Set state to incoming accept
 
-            doc[TAM][SESSION_ID]                    = reqCmd[destination][LCP_SESSION_ID];
-            doc[TAM][PORT_ID]                       = portId;
+            doc[TAM][NODE_ID]                       = reqCmd[destination][LCP_NODE_ID];
+            doc[TAM][PORT_ID]                       = reqCmd[destination][LCP_PORT_ID];
             doc[TAM][TRACK]                         = String(useTrackTxt[destinationTrack]);
             doc[TAM][TRAIN_ID]                      = trainId[destination][ownTrack];
+            doc[TAM][SESSION_ID]                    = reqCmd[destination][LCP_SESSION_ID];
             doc[TAM][STATE][DESIRED]                = reqCmd[destination][LCP_DESIRED_STATE];
             doc[TAM][STATE][REPORTED]               = ACCEPTED;
 
@@ -993,8 +999,8 @@ void keyReceived(char key) {
             lcd.noCursor();
             lcd.noBlink();
             trainNumber = "";
+            resCmd[destination][LCP_NODE_ID]        = tamBoxConfig[destination][ID];
             resCmd[destination][LCP_PORT_ID]        = tamBoxConfig[destination][EXIT];
-            resCmd[destination][LCP_PORT_ID].toLowerCase();
             resCmd[destination][LCP_SESSION_ID]     = "req:" + String(timestamp);
             resCmd[destination][LCP_RESPOND_TO]     = "cmd/" + tamBoxMqtt[SCALE] + "/" +
                                                       "tam/" + tamBoxConfig[OWN][ID] + "/" +
@@ -1002,11 +1008,12 @@ void keyReceived(char key) {
             resCmd[destination][LCP_TRACK]          = String(useTrackTxt[ownTrack]);
             resCmd[destination][LCP_DESIRED_STATE]  = ACCEPT;
 
-            doc[TAM][SESSION_ID]                    = resCmd[destination][LCP_SESSION_ID];
-            doc[TAM][RESPOND_TO]                    = resCmd[destination][LCP_RESPOND_TO];
+            doc[TAM][NODE_ID]                       = resCmd[destination][LCP_NODE_ID];
             doc[TAM][PORT_ID]                       = resCmd[destination][LCP_PORT_ID];
             doc[TAM][TRACK]                         = String(useTrackTxt[destinationTrack]);
             doc[TAM][TRAIN_ID]                      = trainId[destination][ownTrack];
+            doc[TAM][SESSION_ID]                    = resCmd[destination][LCP_SESSION_ID];
+            doc[TAM][RESPOND_TO]                    = resCmd[destination][LCP_RESPOND_TO];
             doc[TAM][STATE][DESIRED]                = resCmd[destination][LCP_DESIRED_STATE];
 
             strcpy(receiver, COMMAND); strcat(receiver, "/");
@@ -1037,6 +1044,7 @@ void keyReceived(char key) {
           case _OUTACCEPT:                                                                      // If state is Outgoing request accepted
             trackState[destination][ownTrack] = _OUTTRAIN;                                      // Set state to outgoing train
 
+            doc[TAM][NODE_ID]                       = tamBoxConfig[OWN][ID];
             doc[TAM][PORT_ID]                       = portId;
             doc[TAM][TRACK]                         = String(useTrackTxt[ownTrack]);
             doc[TAM][TRAIN_ID]                      = trainId[destination][ownTrack];
@@ -1146,22 +1154,57 @@ void keyReceived(char key) {
       }
 
       switch (trackState[destination][ownTrack]) {                                              // Check track state
+        case _OUTREQUEST:                                                                       // If state is outgoing request
+          tamBoxIdle = false;                                                                   // Set tambox busy
+#ifdef DEBUG
+          Serial.printf("%-16s: %d - tamBoxIdle set to false\n", __func__, __LINE__);
+#endif
+          printString(LCD_TAM_CANCEL, destination, DEST_TRAIN_0);                               // Report cancel?
+        break;
+//----------------------------------------------------------------------------------------------
+        case _INTRAIN:                                                                          // If state is incoming train
+          tamBoxIdle = false;                                                                   // Set tambox busy
+#ifdef DEBUG
+          Serial.printf("%-16s: %d - tamBoxIdle set to false\n", __func__, __LINE__);
+#endif
+          showText = true;
+#ifdef DEBUG
+          Serial.printf("%-16s: %d - showText set to true\n", __func__, __LINE__);
+#endif
+          printString(LCD_ARRIVAL, destination, DEST_TRAIN_0);                                  // Report arrival?
+        break;
+//----------------------------------------------------------------------------------------------
+        case _OUTACCEPT:                                                                        // If state is outgoing request accepted
+          tamBoxIdle = false;                                                                   // Set tambox busy
+#ifdef DEBUG
+          Serial.printf("%-16s: %d - tamBoxIdle set to false\n", __func__, __LINE__);
+#endif
+          showText = true;
+#ifdef DEBUG
+          Serial.printf("%-16s: %d - showText set to true\n", __func__, __LINE__);
+#endif
+          printString(LCD_DEPATURE_OK, destination, DEST_TRAIN_0);                              // Report train out!
+        break;
+//----------------------------------------------------------------------------------------------
         case _IDLE:                                                                             // If track state is idle
+          portId = String(destIDTxt[destination]);
+          portId.toLowerCase();
           traffDir[destination][ownTrack] = DIR_OUT;
 
-          resCmd[destination][LCP_PORT_ID]        = String(destIDTxt[destination]);
-          resCmd[destination][LCP_PORT_ID].toLowerCase();
+          resCmd[destination][LCP_NODE_ID]        = tamBoxConfig[destination][ID];
+          resCmd[destination][LCP_PORT_ID]        = tamBoxConfig[destination][EXIT];
           resCmd[destination][LCP_SESSION_ID]     = "req:" + String(timestamp);
           resCmd[destination][LCP_RESPOND_TO]     = "cmd/" + tamBoxMqtt[SCALE] + "/" +
                                                     "tam/" + tamBoxConfig[OWN][ID] + "/" +
-                                                     resCmd[destination][LCP_PORT_ID] + "/res";
+                                                     portId + "/res";
           resCmd[destination][LCP_TRACK]          = String(useTrackTxt[destinationTrack]);
           resCmd[destination][LCP_DESIRED_STATE]  = IN;
 
+          doc[TAM][NODE_ID]                       = resCmd[destination][LCP_NODE_ID];
+          doc[TAM][PORT_ID]                       = resCmd[destination][LCP_PORT_ID];
+          doc[TAM][TRACK]                         = resCmd[destination][LCP_TRACK];
           doc[TAM][SESSION_ID]                    = resCmd[destination][LCP_SESSION_ID];
           doc[TAM][RESPOND_TO]                    = resCmd[destination][LCP_RESPOND_TO];
-          doc[TAM][PORT_ID]                       = tamBoxConfig[destination][EXIT];
-          doc[TAM][TRACK]                         = resCmd[destination][LCP_TRACK];
           doc[TAM][STATE][DESIRED]                = resCmd[destination][LCP_DESIRED_STATE];
 
           strcpy(receiver, COMMAND); strcat(receiver, "/");
@@ -1184,45 +1227,25 @@ void keyReceived(char key) {
             }
 #endif
           trackState[destination][ownTrack] = _TRAFDIR;                                         // Set state to direction selection
+          tamBoxIdle = true;                                                                    // Set tambox idle
+#ifdef DEBUG
+          Serial.printf("%-16s: %d - tamBoxIdle set to true\n", __func__, __LINE__);
+#endif
 #ifdef DEBUG
           Serial.printf("%-16s: %d State changed to %s for %s track!\n", __func__, __LINE__, trackStateTxt[trackState[destination][ownTrack]], useTrackTxt[ownTrack]);
           Serial.printf("%-16s: %d Traffic direction %s set\n", __func__, __LINE__, useTrackTxt[traffDir[destination][ownTrack]]);
 #endif
         break;
 //----------------------------------------------------------------------------------------------
-        case _OUTREQUEST:                                                                       // If state is outgoing request
-          tamBoxIdle = false;                                                                   // Set tambox busy
-#ifdef DEBUG
-          Serial.printf("%-16s: %d - tamBoxIdle set to false\n", __func__, __LINE__);
-#endif
-          printString(LCD_TAM_CANCEL, destination, DEST_TRAIN_0);                               // Report cancel?
-        break;
-//----------------------------------------------------------------------------------------------
-        case _INTRAIN:                                                                          // If state is incoming train
-          tamBoxIdle = false;                                                                   // Set tambox busy
-#ifdef DEBUG
-          Serial.printf("%-16s: %d - tamBoxIdle set to false\n", __func__, __LINE__);
-#endif
-          printString(LCD_ARRIVAL, destination, DEST_TRAIN_0);                                  // Report arrival?
-        break;
-//----------------------------------------------------------------------------------------------
-        case _OUTACCEPT:                                                                        // If state is outgoing request accepted
-          tamBoxIdle = false;                                                                   // Set tambox busy
-#ifdef DEBUG
-          Serial.printf("%-16s: %d - tamBoxIdle set to false\n", __func__, __LINE__);
-#endif
-          printString(LCD_DEPATURE_OK, destination, DEST_TRAIN_0);                              // Report train out!
-        break;
-//----------------------------------------------------------------------------------------------
         default:                                                                                // Do nothing
           destination = DEST_NOT_SELECTED;                                                      // Set destination not selected
+          tamBoxIdle = true;                                                                    // Set tambox idle
+#ifdef DEBUG
+          Serial.printf("%-16s: %d - tamBoxIdle set to true\n", __func__, __LINE__);
+#endif
         break;
       }
 
-      tamBoxIdle = true;                                                                        // Set tambox busy
-#ifdef DEBUG
-      Serial.printf("%-16s: %d - tamBoxIdle set to true\n", __func__, __LINE__);
-#endif
     break;
 //----------------------------------------------------------------------------------------------
     default:                                                                                    // Number key pressed
@@ -1357,7 +1380,6 @@ void handleDirection(uint8_t dest, uint8_t receivedTrack, uint8_t orderCode) {
   uint8_t maxSize = 255;
   doc[TAM][VERSION]   = LCP_BODY_VER;
   doc[TAM][TIMESTAMP] = epochTime + millis() / 1000;
-  doc[TAM][NODE_ID]   = tamBoxConfig[OWN][ID];
 
   switch (orderCode) {
     case CODE_TRAFDIR_REQ_IN:                                                                   // Incoming traffic direction change
@@ -1373,10 +1395,9 @@ void handleDirection(uint8_t dest, uint8_t receivedTrack, uint8_t orderCode) {
             traffDir[dest][ownTrack] = DIR_IN;                                                  // Set traffic direction to in
             setDirString(dest, ownTrack);
             updateLcd(dest);
-            portId                    = String(destIDTxt[dest]);
-            portId.toLowerCase();
 
-            doc[TAM][PORT_ID]         = portId;
+            doc[TAM][NODE_ID]         = reqCmd[dest][LCP_NODE_ID];
+            doc[TAM][PORT_ID]         = reqCmd[dest][LCP_PORT_ID];
             doc[TAM][TRACK]           = String(useTrackTxt[receivedTrack]);
             doc[TAM][SESSION_ID]      = reqCmd[dest][LCP_SESSION_ID];
             doc[TAM][STATE][DESIRED]  = reqCmd[dest][LCP_DESIRED_STATE];
@@ -1402,10 +1423,8 @@ void handleDirection(uint8_t dest, uint8_t receivedTrack, uint8_t orderCode) {
           else {                                                                                // Tambox busy, reject direction in
             traffDir[dest][ownTrack] = DIR_OUT;                                                 // Set traffic direction to out
 
-            portId                    = String(destIDTxt[dest]);
-            portId.toLowerCase();
-
-            doc[TAM][PORT_ID]         = portId;
+            doc[TAM][NODE_ID]         = reqCmd[dest][LCP_NODE_ID];
+            doc[TAM][PORT_ID]         = reqCmd[dest][LCP_PORT_ID];
             doc[TAM][TRACK]           = String(useTrackTxt[receivedTrack]);
             doc[TAM][SESSION_ID]      = reqCmd[dest][LCP_SESSION_ID];
             doc[TAM][STATE][DESIRED]  = reqCmd[dest][LCP_DESIRED_STATE];
@@ -1430,10 +1449,8 @@ void handleDirection(uint8_t dest, uint8_t receivedTrack, uint8_t orderCode) {
         break;
 //----------------------------------------------------------------------------------------------
         case _OUTREQUEST:                                                                       // If track state is outgoing request
-          portId                    = String(destIDTxt[dest]);
-          portId.toLowerCase();
-
-          doc[TAM][PORT_ID]         = portId;
+          doc[TAM][NODE_ID]         = reqCmd[dest][LCP_NODE_ID];
+          doc[TAM][PORT_ID]         = reqCmd[dest][LCP_PORT_ID];
           doc[TAM][TRACK]           = String(useTrackTxt[receivedTrack]);
           doc[TAM][SESSION_ID]      = reqCmd[dest][LCP_SESSION_ID];
           doc[TAM][STATE][DESIRED]  = reqCmd[dest][LCP_DESIRED_STATE];
@@ -1524,14 +1541,92 @@ void handleDirection(uint8_t dest, uint8_t receivedTrack, uint8_t orderCode) {
 void handleTrain(uint8_t dest, uint8_t receivedTrack, uint8_t orderCode, uint16_t train) {
 
 #ifdef DEBUG
-//  String clt = tamBoxConfig[dest][ID];
   Serial.printf("%-16s: %d \n", __func__, __LINE__);
   Serial.printf("%-16s: %d %s(dest: %d, receivedTrack: %d, orderCode: %d, train: %d)\n", __func__, __LINE__, __func__, dest, receivedTrack, orderCode, train);
+  uint8_t maxSize = 255;
 #endif
 
+  StaticJsonDocument<255> doc;                                                                  // Create a json object
+  char receiver[32];                                                                            // mqtt message receiver
+  char body[254];                                                                               // json body
+  uint8_t check;
+  size_t n;
   uint8_t ownTrack = LEFT_TRACK;                                                                // Default single track traffic
 
-  if (tamBoxIdle) {
+  if (orderCode == CODE_CANCEL) {                                                               // Incoming cancel, overrides busy tambox
+    switch (trackState[dest][ownTrack]) {                                                       // Check track state
+      case _INREQUEST:                                                                          // If track state is incoming request
+        if (trainId[dest][ownTrack] == train) {
+#ifdef DEBUG
+          Serial.printf("%-16s: %d Incoming request from: %s with train %d canceled\n", __func__, __LINE__, destIDTxt[dest], train);
+#endif
+          trainId[dest][ownTrack] = DEST_TRAIN_0;
+          tamBoxIdle = false;                                                                   // Set tambox busy
+#ifdef DEBUG
+          Serial.printf("%-16s: %d - tamBoxIdle set to false\n", __func__, __LINE__);
+#endif
+          trackState[dest][ownTrack] = _IDLE;                                                   // Set track state to idle
+#ifdef DEBUG
+          Serial.printf("%-16s: %d State changed to %s for %s track!\n", __func__, __LINE__, trackStateTxt[trackState[dest][ownTrack]], useTrackTxt[ownTrack]);
+#endif
+          traffDir[dest][ownTrack] = DIR_IN;                                                    // Set traffic direction to in
+          setDirString(dest, ownTrack);
+          updateLcd(dest);
+
+          doc[TAM][VERSION]         = LCP_BODY_VER;
+          doc[TAM][TIMESTAMP]       = epochTime + millis() / 1000;
+          doc[TAM][NODE_ID]         = reqCmd[dest][LCP_NODE_ID];
+          doc[TAM][PORT_ID]         = reqCmd[dest][LCP_PORT_ID];
+          doc[TAM][TRACK]           = String(useTrackTxt[receivedTrack]);
+          doc[TAM][TRAIN_ID]        = train;
+          doc[TAM][SESSION_ID]      = reqCmd[dest][LCP_SESSION_ID];
+          doc[TAM][STATE][DESIRED]  = reqCmd[dest][LCP_DESIRED_STATE];
+          doc[TAM][STATE][REPORTED] = CANCELED;                                                 // reply canceled
+
+          strcpy(receiver, reqCmd[dest][LCP_RESPOND_TO].c_str());
+
+          n = serializeJson(doc, body);                                                         // Create a json body
+          check = mqttClient.publish(receiver, body, NORETAIN);                                 // Publish direction change accepted
+#ifdef DEBUG
+          if (check == 1) {
+            Serial.printf("%-16s: %d Publish direction change accepted with body size: %d (%d to max size)\n", __func__, __LINE__, n, maxSize - n);
+            Serial.printf("%-16s: %d Publish: %s - %s\n", __func__, __LINE__, receiver, body);
+          }
+
+          else {
+            Serial.printf("%-16s: %d Publish %s failed with code: %d\n", __func__, __LINE__, receiver, check);
+          }
+#endif
+          printString(LCD_TAM_CANCELED, destination, DEST_TRAIN_0);                             // Set string to tam canceled
+          beep(TIME_BEEP_DURATION, BEEP_NOK);                                                   // Beep not ok
+          showText = true;                                                                      // Show the string
+#ifdef DEBUG
+          Serial.printf("%-16s: %d - ShowText set to true\n", __func__, __LINE__);
+#endif
+          setNodeString(dest, ownTrack);
+          setDirString(dest, ownTrack);
+          showTime = millis();
+#ifdef DEBUG
+          Serial.printf("%-16s: %d - showTime set to millis()\n", __func__, __LINE__);
+#endif
+        }
+#ifdef DEBUG
+        else {
+          Serial.printf("%-16s: %d Wrong train for incoming cancel: %d\n", __func__, __LINE__, train);
+        }
+#endif
+      break;
+//----------------------------------------------------------------------------------------------
+#ifdef DEBUG
+      default:                                                                                  // Do nothing
+        Serial.printf("%-16s: %d Wrong state for incoming cancel\n", __func__, __LINE__);
+      break;
+#endif
+    }
+  }
+//----------------------------------------------------------------------------------------------
+
+  else if (tamBoxIdle) {
     destination = dest;                                                                         // Save dest
 
     if (tamBoxConfig[dest][TRACKS].toInt() == DOUBLE_TRACK) {
@@ -1663,51 +1758,6 @@ void handleTrain(uint8_t dest, uint8_t receivedTrack, uint8_t orderCode, uint16_
 #ifdef DEBUG
           default:                                                                              // Do nothing
             Serial.printf("%-16s: %d Wrong state for incoming reject\n", __func__, __LINE__);
-          break;
-#endif
-        }
-//----------------------------------------------------------------------------------------------
-      break;
-
-      case CODE_CANCELED:                                                                       // Incoming cancel
-        switch (trackState[dest][ownTrack]) {                                                   // Check track state
-          case _INREQUEST:                                                                      // If track state is incoming request
-            if (trainId[dest][ownTrack] == train) {
-#ifdef DEBUG
-              Serial.printf("%-16s: %d Incoming request from: %s with train %d canceled\n", __func__, __LINE__, destIDTxt[dest], train);
-#endif
-              trainId[dest][ownTrack] = DEST_TRAIN_0;
-              tamBoxIdle = false;                                                               // Set tambox busy
-#ifdef DEBUG
-              Serial.printf("%-16s: %d - tamBoxIdle set to false\n", __func__, __LINE__);
-#endif
-              trackState[dest][ownTrack] = _IDLE;                                               // Set track state to idle
-#ifdef DEBUG
-              Serial.printf("%-16s: %d State changed to %s for %s track!\n", __func__, __LINE__, trackStateTxt[trackState[dest][ownTrack]], useTrackTxt[ownTrack]);
-#endif
-              printString(LCD_TAM_CANCELED, destination, DEST_TRAIN_0);                         // Set string to tam canceled
-              beep(TIME_BEEP_DURATION, BEEP_NOK);                                               // Beep not ok
-              showText = true;                                                                  // Show the string
-#ifdef DEBUG
-              Serial.printf("%-16s: %d - ShowText set to true\n", __func__, __LINE__);
-#endif
-              setNodeString(dest, ownTrack);
-              setDirString(dest, ownTrack);
-              showTime = millis();
-#ifdef DEBUG
-              Serial.printf("%-16s: %d - showTime set to millis()\n", __func__, __LINE__);
-#endif
-            }
-#ifdef DEBUG
-            else {
-              Serial.printf("%-16s: %d Wrong train for incoming cancel: %d\n", __func__, __LINE__, train);
-            }
-#endif
-          break;
-//----------------------------------------------------------------------------------------------
-#ifdef DEBUG
-          default:                                                                              // Do nothing
-            Serial.printf("%-16s: %d Wrong state for incoming cancel\n", __func__, __LINE__);
           break;
 #endif
         }
@@ -2664,19 +2714,20 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
 #ifdef DEBUG
   Serial.printf("%-16s: %d\n", __func__, __LINE__);
-  Serial.printf("%-16s: %d Recieved message from: %s\n", __func__, __LINE__, topic);
-//  Serial.printf("%-16s: %d Recieved: %s: %s\n", __func__, __LINE__, topic, msg);
+//  Serial.printf("%-16s: %d Recieved message: %s\n", __func__, __LINE__, topic);
+   Serial.printf("%-16s: %d Recieved message: %s - %s\n", __func__, __LINE__, topic, msg);
 #endif
 
-  uint8_t MyP = 0;
-  uint8_t MyI = 0;
+  uint8_t i = 0;
+  uint8_t p = 0;
+  String s;
   String subTopic[NUM_OF_TOPICS];                                                               // Topic array
 
-  for (uint8_t i = 0; i < NUM_OF_TOPICS; i++) {                                                 // Split topic string into an array
-    MyI         = tpc.indexOf("/", MyP);
-    String s    = tpc.substring(MyP, MyI);
-    MyP         = MyI + 1;
-    subTopic[i] = s;
+  for (uint8_t t = 0; t < NUM_OF_TOPICS; t++) {                                                 // Split topic string into an array
+    i = tpc.indexOf("/", p);
+    s = tpc.substring(p, i);
+    p = i + 1;
+    subTopic[t] = s;
   }
 
   if (subTopic[TOPIC_SCALE] == tamBoxMqtt[SCALE]) {                                             // Scale (1)
@@ -3300,9 +3351,12 @@ void jsonReceived(uint8_t order, char* body) {
 }
 */
   uint16_t train;
-  uint8_t track, orderCode;
+  uint8_t track, orderCode, i;
   char receiver[32];
-//  String msg = String((char*)payload);
+  uint8_t MyP = 0;
+  uint8_t MyI = 0;
+  uint8_t dest = 255;
+  String s, tpc, nodeId, portId;
   StaticJsonDocument<384> doc;                                                                  // Create a json object
   uint8_t maxSize = 384;
   deserializeJson(doc, body);                                                                   // Read the json body
@@ -3319,14 +3373,36 @@ void jsonReceived(uint8_t order, char* body) {
     Serial.printf("%-16s: %d node-id   : %s\n", __func__, __LINE__, String(doc[TAM][NODE_ID]));
     Serial.printf("%-16s: %d port-id   : %s\n", __func__, __LINE__, String(doc[TAM][PORT_ID]));
     Serial.printf("%-16s: %d track     : %s\n", __func__, __LINE__, String(doc[TAM][TRACK]));
-    Serial.printf("%-16s: %d train-id  : %d\n", __func__, __LINE__, doc[TAM][TRAIN_ID]);
+    Serial.printf("%-16s: %d train-id  : %s\n", __func__, __LINE__, String(doc[TAM][TRAIN_ID]));
     Serial.printf("%-16s: %d desired   : %s\n", __func__, __LINE__, String(doc[TAM][STATE][DESIRED]));
     Serial.printf("%-16s: %d reported  : %s\n", __func__, __LINE__, String(doc[TAM][STATE][REPORTED]));
 #endif
 
     if (order == _REQUEST) {                                                                    // Tam request
-      for (uint8_t dest = 0; dest < DEST_BUTTONS; dest++) {
-        if (String(doc[TAM][NODE_ID]) == tamBoxConfig[dest][ID]) {
+      if (String(doc[TAM][NODE_ID]) == tamBoxConfig[OWN][ID]) {
+        tpc = String(doc[TAM][RESPOND_TO]);
+
+        for (i = 0; i < NUM_OF_TOPICS; i++) {                                                   // Get sending node-id
+          MyI = tpc.indexOf("/", MyP);
+          s   = tpc.substring(MyP, MyI);
+          MyP = MyI + 1;
+          if (i == TOPIC_NODE_ID) {
+            nodeId = s;
+          }
+
+          else if (i == TOPIC_PORT_ID) {
+            portId = s;
+          }
+        }
+
+        for (i = 0; i < NUM_OF_DEST_STRINGS; i++) {
+          if (tamBoxConfig[i][ID] == nodeId){
+            dest = i;                                                                           // Set corresponding destination
+            break;
+          }
+        }
+
+        if (dest < 255) {
           track                           = (String(doc[TAM][TRACK]) == LEFT) ? LEFT_TRACK : RIGHT_TRACK;
 
           if (String(doc[TAM][STATE][DESIRED]) == ACCEPT) {
@@ -3344,7 +3420,8 @@ void jsonReceived(uint8_t order, char* body) {
           reqCmd[dest][LCP_SESSION_ID]    = String(doc[TAM][SESSION_ID]);
           reqCmd[dest][LCP_RESPOND_TO]    = String(doc[TAM][RESPOND_TO]);
           reqCmd[dest][LCP_DESIRED_STATE] = String(doc[TAM][STATE][DESIRED]);
-          reqCmd[dest][LCP_PORT_ID]       = String(doc[TAM][PORT_ID]);
+          reqCmd[dest][LCP_NODE_ID]       = nodeId;
+          reqCmd[dest][LCP_PORT_ID]       = portId;
           reqCmd[dest][LCP_TRACK]         = String(doc[TAM][TRACK]);
 
           if (doc[TAM][TRAIN_ID]) {
@@ -3362,18 +3439,30 @@ void jsonReceived(uint8_t order, char* body) {
             handleDirection(dest, track, orderCode);                                            // Call traffic direction handler routine
           }
         }
+
+        else {
+#ifdef DEBUG
+          Serial.printf("%-16s: %d respond-to is missing\n", __func__, __LINE__);
+#endif
+        }
+      }
+
+      else {
+#ifdef DEBUG
+        Serial.printf("%-16s: %d Not to me, sent to: %s\n", __func__, __LINE__, String(doc[TAM][NODE_ID]));
+#endif
       }
     }
 
     else if (order == _RESPONSE) {                                                              // Tam response
-      for (uint8_t dest = 0; dest < DEST_BUTTONS; dest++) {
-        if (String(doc[TAM][NODE_ID]) == tamBoxConfig[dest][ID]) {
+      if (String(doc[TAM][NODE_ID]) == tamBoxConfig[OWN][ID]) {
+        for (dest = 0; dest < DEST_BUTTONS; dest++) {
           if (resCmd[dest][LCP_SESSION_ID] == String(doc[TAM][SESSION_ID])) {
-            track                         = (String(doc[TAM][TRACK]) == LEFT) ? LEFT_TRACK : RIGHT_TRACK;
+            track                       = (String(doc[TAM][TRACK]) == LEFT) ? LEFT_TRACK : RIGHT_TRACK;
 
             if (doc[TAM][TRAIN_ID]) {
-              train                       = doc[TAM][TRAIN_ID];
-              orderCode                   = (String(doc[TAM][STATE][REPORTED]) == ACCEPTED) ? CODE_ACCEPTED : CODE_REJECTED;
+              train                     = doc[TAM][TRAIN_ID];
+              orderCode                 = (String(doc[TAM][STATE][REPORTED]) == ACCEPTED) ? CODE_ACCEPTED : CODE_REJECTED;
 #ifdef DEBUG
               Serial.printf("%-16s: %d TAM response received\n", __func__, __LINE__);
 #endif
@@ -3381,94 +3470,114 @@ void jsonReceived(uint8_t order, char* body) {
             }
 
             else {
-              orderCode                   = (String(doc[TAM][STATE][REPORTED]) == IN) ? CODE_TRAFDIR_RES_IN : CODE_TRAFDIR_RES_OUT;
+              orderCode                 = (String(doc[TAM][STATE][REPORTED]) == IN) ? CODE_TRAFDIR_RES_IN : CODE_TRAFDIR_RES_OUT;
 #ifdef DEBUG
               Serial.printf("%-16s: %d Direction response received\n", __func__, __LINE__);
 #endif
               handleDirection(dest, track, orderCode);                                          // Call traffic direction handler routine
-		    }
-          }
+            }
 
-#ifdef DEBUG
-          else {
-            Serial.printf("%-16s: %d Not same session-id as in the request\n", __func__, __LINE__);
-            Serial.printf("%-16s: %d Skickat session-id:  ", __func__, __LINE__);
-            Serial.println(String(resCmd[dest][LCP_SESSION_ID]));
-            Serial.printf("%-16s: %d Mottaget session-id: ", __func__, __LINE__);
-            Serial.println(String(doc[TAM][SESSION_ID]));
+            break;
           }
-#endif
         }
+      }
+
+      else {
+#ifdef DEBUG
+        Serial.printf("%-16s: %d Not to me, sent to: %s\n", __func__, __LINE__, String(doc[TAM][NODE_ID]));
+#endif
       }
     }
 
     else if (order == _DATA) {                                                                  // message is data
       for (uint8_t dest = 0; dest < DEST_BUTTONS; dest++) {
         if (String(doc[TAM][NODE_ID]) == tamBoxConfig[dest][ID]) {
-          track                           = (String(doc[TAM][TRACK]) == LEFT) ? LEFT_TRACK : RIGHT_TRACK;
-          orderCode                       = (String(doc[TAM][STATE][REPORTED]) == IN) ? CODE_TRAIN_IN : CODE_TRAIN_OUT;
-          train                           = doc[TAM][TRAIN_ID];
+          track                         = (String(doc[TAM][TRACK]) == LEFT) ? LEFT_TRACK : RIGHT_TRACK;
+          orderCode                     = (String(doc[TAM][STATE][REPORTED]) == IN) ? CODE_TRAIN_IN : CODE_TRAIN_OUT;
+          train                         = doc[TAM][TRAIN_ID];
 #ifdef DEBUG
           Serial.printf("%-16s: %d Train report received\n", __func__, __LINE__);
 #endif
           handleTrain(dest, track, orderCode, train);                                           // Call train handler routine
+          break;
         }
       }
     }
   }
 
   else if (String(doc[PING][VERSION]) == LCP_BODY_VER) {                                        // Type is Ping
+    for (uint8_t dest = 0; dest < DEST_BUTTONS; dest++) {
+      if (String(doc[TAM][NODE_ID]) == tamBoxConfig[dest][ID]) {
 #ifdef DEBUG
-    Serial.printf("%-16s: %d Ping object received\n", __func__, __LINE__);
+        Serial.printf("%-16s: %d Ping object received from: %s\n", __func__, __LINE__, tamBoxConfig[dest][ID]);
 #endif
-
+      }
+    }
   }
 
   else if (String(doc[TOWER][VERSION]) == LCP_BODY_VER &&
            String(doc[TOWER][PORT_ID]) == INVENTORY) {                                          // Type is Tower inventory
+    if (String(doc[TAM][NODE_ID]) == tamBoxConfig[OWN][ID]) {
 #ifdef DEBUG
-    Serial.printf("%-16s: %d Inventory object received\n", __func__, __LINE__);
+      Serial.printf("%-16s: %d Inventory object received\n", __func__, __LINE__);
 #endif
-    JsonObject tower = doc[TOWER];
-    char reportData[254];                                                                       // json body
+      JsonObject tower = doc[TOWER];
+      char reportData[254];                                                                     // json body
 
-    doc[TOWER][TIMESTAMP]                 = epochTime + millis() / 1000;
-    doc[TOWER][STATE][REPORTED]           = String(doc[TOWER][STATE][DESIRED]);
-    doc[TOWER][NODE_ID]                   = tamBoxConfig[OWN][ID];
-    strcpy(receiver, doc[TOWER][RESPOND_TO]);
-    doc.remove(RESPOND_TO);                                                                     // Remove respond-to taggen
+      doc[TOWER][TIMESTAMP]               = epochTime + millis() / 1000;
+      doc[TOWER][STATE][REPORTED]         = String(doc[TOWER][STATE][DESIRED]);
+      doc[TOWER][NODE_ID]                 = tamBoxConfig[OWN][ID];
+      strcpy(receiver, doc[TOWER][RESPOND_TO]);
+      doc.remove(RESPOND_TO);                                                                   // Remove respond-to taggen
 
-    size_t n = serializeJson(doc, reportData);                                                  // Create a json body
-    uint8_t check = mqttClient.publish(receiver, reportData, NORETAIN);                         // Publish an inventory response
+      size_t n = serializeJson(doc, reportData);                                                // Create a json body
+      uint8_t check = mqttClient.publish(receiver, reportData, NORETAIN);                       // Publish an inventory response
 
 #ifdef DEBUG
-    if (check == 1) {
-      Serial.printf("%-16s: %d Publish: %s with body size: %d (%d to max size)\n", __func__, __LINE__, receiver, n, maxSize - n);
+      if (check == 1) {
+        Serial.printf("%-16s: %d Publish: %s with body size: %d (%d to max size)\n", __func__, __LINE__, receiver, n, maxSize - n);
+      }
+
+      else {
+        Serial.printf("%-16s: %d Publish %s failed with code: %d\n", __func__, __LINE__, receiver, check);
+      }
+#endif
     }
 
     else {
-      Serial.printf("%-16s: %d Publish %s failed with code: %d\n", __func__, __LINE__, receiver, check);
-    }
+#ifdef DEBUG
+      Serial.printf("%-16s: %d Not to me, sent to: %s\n", __func__, __LINE__, String(doc[TAM][NODE_ID]));
 #endif
+    }
   }
 
   else if (String(doc[NODE][VERSION]) == LCP_BODY_VER) {                                        // Type is Node
+    if (order == _REQUEST) {
+      if (String(doc[TAM][NODE_ID]) == (tamBoxConfig[OWN][ID] + "-" + NODE_SUPERVISOR)) {
 #ifdef DEBUG
-    Serial.printf("%-16s: %d Node object received\n", __func__, __LINE__);
+        Serial.printf("%-16s: %d Node object received\n", __func__, __LINE__);
 #endif
-    if (String(doc[NODE][STATE][DESIRED]) == LCP_BODY_REBOOT) {                                 // Reboot the tambox
-        needReset = true;
-    }
+        if (String(doc[NODE][STATE][DESIRED]) == LCP_BODY_REBOOT) {                             // Reboot the tambox
+          needReset = true;
+        }
 
-    else if (String(doc[NODE][STATE][DESIRED]) == LCP_BODY_SHUTDOWN) {                          // Shutdown the tambox
+        else if (String(doc[NODE][STATE][DESIRED]) == LCP_BODY_SHUTDOWN) {                      // Shutdown the tambox
 #ifdef DEBUG
-      Serial.printf("%-16s: %d Shuttingdown after 5 seconds.\n", __func__, __LINE__);
+          Serial.printf("%-16s: %d Shuttingdown after 5 seconds.\n", __func__, __LINE__);
 #endif
-      lcd.clear();
-      lcd.home();
-      lcd.print(LCD_SHUTTINGDOWN);
-      delay(5000);
-      ESP.deepSleep(0);
+          lcd.clear();
+          lcd.home();
+          lcd.print(LCD_SHUTTINGDOWN);
+          delay(5000);
+          ESP.deepSleep(0);
+        }
+      }
+
+      else {
+#ifdef DEBUG
+        Serial.printf("%-16s: %d Not to me, sent to: %s\n", __func__, __LINE__, String(doc[TAM][NODE_ID]));
+#endif
+      }
     }
   }
 }
