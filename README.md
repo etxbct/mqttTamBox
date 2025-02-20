@@ -7,7 +7,7 @@ The receiving station can accept or reject the request.
 If it is accepted the seding station report when the train departures the station.  
 The receiving station report when the train arrives at the station.  
 
-The software has obly been tested on a node MCU V3 (esp8266).
+The software has only been tested on a node MCU V3 (esp8266).
 
 ### Features
 * Request to send a train.
