@@ -19,6 +19,6 @@ The software has only been tested on a node MCU V3 (esp8266).
 * Keep a live ping sent every 10 second.
 * Able to remotely restart a mqttTamBox.
 * Able to remotely shutdown a mqttTamBox.
-* Support of different size of LCDs (size configurable on internal configuration page).
+* Support of different LCD sizes (size configurable on internal configuration page).
 * Global configuration fetched from configuration server (server configurable on internal configuration page).
 * Firmware update from internal configuration page.
