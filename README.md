@@ -22,3 +22,5 @@ The software has only been tested on a node MCU V3 (esp8266).
 * Support of different LCD sizes (size configurable on internal configuration page).
 * Global configuration fetched from configuration server (server configurable on internal configuration page).
 * Firmware update from internal configuration page.
+
+Check the [wiki](https://github.com/etxbct/mqttTamBox/wiki) for more detailed information.
