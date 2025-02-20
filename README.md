@@ -17,8 +17,10 @@ The software has only been tested on a node MCU V3 (esp8266).
 * Report departure.
 * Report arrival.
 * Keep a live ping sent every 10 second.
-* Able to remotely restart a mqttTamBox.
-* Able to remotely shutdown a mqttTamBox.
+* Remotely restart of a mqttTamBox.
+* Remotely shutdown of a mqttTamBox.
 * Support of different LCD sizes (size configurable on internal configuration page).
 * Global configuration fetched from configuration server (server configurable on internal configuration page).
 * Firmware update from internal configuration page.
+
+Check the [wiki](https://github.com/etxbct/mqttTamBox/wiki) for more detailed information.
