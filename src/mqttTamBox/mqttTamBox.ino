@@ -1,6 +1,6 @@
 /*******************************************************************************************************************************
  *
- *   mqttTamBox v2.0.11
+ *   mqttTamBox v2.0.12
  *   copyright (c) Benny Tjäder
  *
  *   This program is free software: you can redistribute it and/or modify it under the terms of the
@@ -9,7 +9,7 @@
  *
  *    Uses and have been tested with the following libraries
  *      ArduinoJson           v7.3.0  by Benoit Blanchon     - https: *github.com/bblanchon/ArduinoJson
- *      PubSubClient          v2.8.0  by Nick O'Leary        - https: *pubsubclient.knolleary.net/
+ *      PubSubClient          v2.8.0  by Nick O'Leary        - https: *github.com/pubsubclient.knolleary.net/
  *      IotWebConf            v3.2.1  by Balazs Kelemen      - https: *github.com/prampec/IotWebConf
  *      Keypad                v3.1.1  by Chris--A            - https: *github.com/Chris--A/Keypad
  *      Keypad_I2C            v2.3.1  by Joe Young           - https: *github.com/joeyoung/BensArduino-git (kanske byta till I2CKeypad)
@@ -26,119 +26,8 @@
  *    message  /scale  /type  /node-id   /port-id    /order     payload
  *    cmd      /h0     /tam   /tambox-4  /a          /req       {json}        TAM request message
  *    cmd      /h0     /tam   /tambox-4  /b          /res       {json}        TAM response message
- *    cmd      /h0     /node  /tambox-4  /inventory  /req       {json}        Inventory message
+ *    dt       /h0     /tam   /tambox-4  /a                     {json}        TAM data message
  *    dt       /h0     /ping  /tambox-4                         {json}        Ping message
- *
- *    Traffic direction to tambox-4 on left track:
- *      cmd/h0/tam/tambox-4/a/req                     {"tam": {
- *                                                        "version": "1.0",
- *                                                        "timestamp": 1707767518,
- *                                                        "session-id": "req:1707767518",
- *                                                        "node-id": "tambox-1",
- *                                                        "port-id": "a",
- *                                                        "track": "left",
- *                                                        "respond-to": "cmd/h0/tam/tambox-1/b/res",
- *                                                        "state": {"desired": "in"}
- *                                                      }
- *                                                    }
- *    Traffic direction to tambox-4 on left track accepted by tambox-4:
- *      cmd/h0/tam/tambox-1/b/res                     {"tam": {
- *                                                        "version": "1.0",
- *                                                        "timestamp": 1707767534,
- *                                                        "session-id": "req:1707767518",
- *                                                        "node-id": "tambox-4",
- *                                                        "port-id": "b",
- *                                                        "track": "left",
- *                                                        "state": {"desired": "in", "reported": "in"}
- *                                                      }
- *                                                    }
- *    Request train 2123 to tambox-2 on left track:
- *      cmd/h0/tam/tambox-2/a/req                     {"tam": {
- *                                                        "version": "1.0",
- *                                                        "timestamp": 1707768634,
- *                                                        "session-id": "req:1707768634",
- *                                                        "node-id": "tambox-1",
- *                                                        "port-id": "a",
- *                                                        "track": "left",
- *                                                        "identity": 2123,
- *                                                        "respond-to": "cmd/h0/tam/tambox-1/a/res",
- *                                                        "state": {"desired": "accept"}
- *                                                      }
- *                                                    }
- *    Train 2123 to tambox-5 accepted:
- *      cmd/h0/tam/tambox-1/a/res                     {"tam": {
- *                                                        "version": "1.0",
- *                                                        "timestamp": 1707768655,
- *                                                        "session-id": "req:1707768634",
- *                                                        "node-id": "tambox-5",
- *                                                        "port-id": "a",
- *                                                        "track": "left",
- *                                                        "identity": 2123,
- *                                                        "state": {"desired": "accept", "reported": "accepted"}
- *                                                      }
- *                                                    }
- *    Train 348 to tambox-5 rejected on right track:
- *      cmd/h0/tam/tambox-1/a/res                     {"tam": {
- *                                                        "version": "1.0",
- *                                                        "timestamp": 1707768656,
- *                                                        "node-id": "tambox-5",
- *                                                        "port-id": "a",
- *                                                        "track": "right",
- *                                                        "identity": 348,
- *                                                        "session-id": "req:1707768634",
- *                                                        "state": {"desired": "accept", "reported": "rejected"}
- *                                                      }
- *                                                    }
- *    Train 348 to tambox-5 was canceled before tambox-5 send accepted or rejected
- *      cmd/h0/tam/tambox-5/a/req                     {"tam": {
- *                                                        "version": "1.0",
- *                                                        "timestamp": 1707768766,
- *                                                        "node-id": "tambox-5",
- *                                                        "port-id": "a",
- *                                                        "track": "right",
- *                                                        "identity": 348,
- *                                                        "session-id": "req:1707768766",
- *                                                        "respond-to": "cmd/h0/tam/tambox-1/a/res",
- *                                                        "state": {"desired": "cancel"}
- *                                                      }
- *                                                    }
- *    Tambox-1 sending ping
- *      dt/h0/ping/tambox-1                           {"ping": {
- *                                                        "version": "1.0",
- *                                                        "timestamp": 1707768845,
- *                                                        "node-id": "tambox-1",
- *                                                        "state": {"reported": "ping"},
- *                                                        "metadata": {......}
- *                                                      }
- *                                                    }
- *      example of metadata                            "metadata": {
- *                                                        "type": "mqttTamBox",
- *                                                        "ver": "ver 2.0.0",
- *                                                        "name": "Charlottendahl",
- *                                                        "sign": "CDA",
- *                                                        "rssi": "-65 dbm"
- *                                                      }
- *    Tambox-1 is asked for the inventory list
- *      cmd/h0/node/tambox-1-supervisor/inventory/req {"tower": {
- *                                                        "version": "1.0",
- *                                                        "timestamp": 1707768903,
- *                                                        "node-id": "mqtt-tower",
- *                                                        "port-id": "inventory"
- *                                                        "session-id": "req:1707768903",
- *                                                        "respond-to": "cmd/h0/tower/mqtt-tower/inventory/res",
- *                                                        "state": {"desired": "report"}
- *                                                      }
- *                                                    }
- *
- *    Tambox-1 reply eith the inventory list
- *      cmd/h0/tower/mqtt-tower/inventory/res         {"tower": {
- *                                                        "version": "1.0",
- *                                                        "timestamp": 1707768996,
- *                                                        "node-id": "tambox-1-supervisor",
- *                                                        "session-id": "req:1707768903",
- *                                                        "state": {"desired": "report", "reported": "report"}
- *                                                      }
- *                                                    }
  *
  ********************************************************************************************************************************
  */

@@ -33,7 +33,7 @@
  */
 // SW type and version
 #define SW_TYPE                             "mqttTamBox"      // Name of the software
-#define SW_VERSION                          "ver 2.0.11"      // Version of the software
+#define SW_VERSION                          "ver 2.0.12"      // Version of the software
 
 // -- Configuration specific key. The value should be modified if config structure is changed.
 #define CONFIG_VERSION                         "ver 1.4"
