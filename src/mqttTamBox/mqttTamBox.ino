@@ -608,7 +608,7 @@ void keyReceived(char key) {
 
 #ifdef DEBUG
   Serial.printf("%-16s: %d  Key pushed: %c\n", __func__, __LINE__, key);
-  Serial.printf("%-16s: %d  Destination in %s\n", __func__, __LINE__, destIDTxt[destination]);
+  Serial.printf("%-16s: %d  Destination in: %s\n", __func__, __LINE__, destIDTxt[destination]);
 #endif
 
   StaticJsonDocument<255> doc;                                                                  // Create a json object
